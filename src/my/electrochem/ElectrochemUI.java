@@ -62,7 +62,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
     
     double x1, x2, y1, y2;
     boolean click = true;
-    private ChartPanel chartPanel;
+    private final ChartPanel chartPanel;
     private XYSeriesCollection dataset1;
     
     public ElectrochemUI() {
@@ -187,7 +187,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
         String xAxisLabel = "E (V)";
         String yAxisLabel = "i (A)";
  
-        dataset1 = createDataset();
+        dataset1 = createEmptyDataset();
  
         JFreeChart chart = ChartFactory.createScatterPlot(chartTitle,
             xAxisLabel, yAxisLabel, dataset1);        
@@ -245,14 +245,10 @@ public class ElectrochemUI extends javax.swing.JFrame {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
  
         // sets paint color for each series
-        renderer.setSeriesPaint(0, Color.RED);
-        renderer.setSeriesPaint(1, Color.GREEN);
-        renderer.setSeriesPaint(2, Color.YELLOW);
+        //renderer.setSeriesPaint(0, Color.RED);
 
         // sets thickness for series (using strokes)
         //renderer.setSeriesStroke(0, new BasicStroke(5.0f));
-        //renderer.setSeriesStroke(1, new BasicStroke(3.0f));
-        //renderer.setSeriesStroke(2, new BasicStroke(2.0f));
         renderer.setBaseLinesVisible(true);
         //renderer.setSeriesLinesVisible(0, true);
  
@@ -272,42 +268,11 @@ public class ElectrochemUI extends javax.swing.JFrame {
 
         plot.setRenderer(renderer);
         
-        
-//        public static XYSeriesCollection getDataset() {
-//            return dataset;
-//        };
- 
         return new ChartPanel(chart);
     }
     
-    private XYSeriesCollection createDataset() {        
+    private XYSeriesCollection createEmptyDataset() {        
         XYSeriesCollection dataset = new XYSeriesCollection();
-        XYSeries series1 = new XYSeries("Object 1");
-        XYSeries series2 = new XYSeries("Object 2");
-        XYSeries series3 = new XYSeries("Object 3");
-
-        series1.add(1.0, 2.0);
-        series1.add(2.0, 3.0);
-        series1.add(3.0, 2.5);
-        series1.add(3.5, 2.8);
-        series1.add(4.2, 6.0);
-
-        series2.add(2.0, 1.0);
-        series2.add(2.5, 2.4);
-        series2.add(3.2, 1.2);
-        series2.add(3.9, 2.8);
-        series2.add(4.6, 3.0);
-
-        series3.add(1.2, 4.0);
-        series3.add(2.5, 4.4);
-        series3.add(3.8, 4.2);
-        series3.add(4.3, 3.8);
-        series3.add(4.5, 4.0);
-
-        dataset.addSeries(series1);
-        dataset.addSeries(series2);
-        dataset.addSeries(series3);
-
         return dataset;
     }
     
@@ -354,6 +319,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
         Exit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
+        fileChooser.setCurrentDirectory(new java.io.File("/Users/yerga/Development/GPESfiles"));
         fileChooser.setDialogTitle("Open file...");
         fileChooser.setFileFilter(new OCWFilter());
 
