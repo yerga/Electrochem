@@ -297,6 +297,10 @@ public class ElectrochemUI extends javax.swing.JFrame {
         return series1;
         
     }
+    public static boolean isOSX() {
+        String osName = System.getProperty("os.name");
+        return osName.contains("OS X");
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -427,15 +431,19 @@ public class ElectrochemUI extends javax.swing.JFrame {
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
         
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        //Aqua should be used as theme in next lines
-
-        
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+                if (!isOSX()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                } else {
+                    System.setProperty("apple.laf.useScreenMenuBar", "true");
+                    if ("Aqua".equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
                 }
             }
         } catch (ClassNotFoundException ex) {
