@@ -26,33 +26,25 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYLineAnnotation;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.ChartProgressEvent;
 import org.jfree.chart.event.ChartProgressListener;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-class OCWFilter extends javax.swing.filechooser.FileFilter {
-        @Override
-        public boolean accept(File file) {
-            // Allow only directories, or files with ".txt" extension
-            return file.isDirectory() || file.getAbsolutePath().endsWith(".ocw");
-        }
-        @Override
-        public String getDescription() {
-            // This description will be displayed in the dialog,
-            // hard-coded = ugly, should be done via I18N
-            return "CV-LSV GPES (*.ocw)";
-        }
-    } 
 
 public class ElectrochemUI extends javax.swing.JFrame {
 
@@ -115,7 +107,9 @@ public class ElectrochemUI extends javax.swing.JFrame {
             //Path path = FileSystems.getDefault().getPath("libs", "filename.txt");
             //br = new BufferedReader(new FileReader(path.toString()));
             br = new BufferedReader(new FileReader(fileOpen.getAbsolutePath()));
+            String ext = getExtension(fileOpen.getAbsolutePath());            
             
+            //TODO: 3-column data for DPV/SWV etc.
             int i=0;
             while ((sCurrentLine = br.readLine()) != null) {
                 if ((i != 0)&&(i != 1)) {
@@ -143,20 +137,25 @@ public class ElectrochemUI extends javax.swing.JFrame {
             System.out.println("potentials:"+potentials);
             System.out.println("currents:"+currents);
             
-            //TODO: cambiar ejes para cada tecnica
-            //TODO: mostrar tecnica en algun lado
-            //TODO: not overlay archivos de diferentes tecnicas
-            //owc: CV, LSV -> y: i, x: E
-            //oxw: CA -> y: E, x: t(s)
-            //oew: DPV -> y:i, x:E
+            //TODO: show technique at the UI
+            //TODO: overlay not possible for different techniques         
+            ArrayList<String> labels = getGPESXYlabels(fileOpen, ext);
+        
+            ValueAxis xaxis = chartPanel.getChart().getXYPlot().getDomainAxis();
+            ValueAxis yaxis = chartPanel.getChart().getXYPlot().getRangeAxis();
+            xaxis.setLabel(labels.get(0));
+            yaxis.setLabel(labels.get(1));
+            
+            
             XYSeries series = getXYSeriesfromiE(potentials, currents, 
                     fileOpen.getName());
             if (!overlay) {
-                System.out.println("no overlay gpes open");
+                //System.out.println("no overlay gpes open");
                 dataset1.removeAllSeries();
             }
             
             dataset1.addSeries(series);
+            jPanel1.validate();
               
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,7 +167,6 @@ public class ElectrochemUI extends javax.swing.JFrame {
             }
         }
 
-
     }
 
     private void createLineAnn(XYPlot plot, double a1, double b1, double a2, double b2) {
@@ -177,8 +175,6 @@ public class ElectrochemUI extends javax.swing.JFrame {
             plot.addAnnotation(ann1); 
             x1 = -423.0;
         } 
-        
-        
     }
     private ChartPanel createChartPanel() {
         //creates a line chart object
@@ -276,16 +272,6 @@ public class ElectrochemUI extends javax.swing.JFrame {
         return dataset;
     }
     
-    private XYSeriesCollection newCollection() {        
-        XYSeriesCollection dataset = new XYSeriesCollection();
-        XYSeries series3 = new XYSeries("Object 23");
-
-        series3.add(8.8, 20.0);
-        series3.add(9.9, 23.0);
-        dataset.addSeries(series3);
-        return dataset;
-    }
-    
     private XYSeries getXYSeriesfromiE(ArrayList<Float> potentials, 
             ArrayList<Float> currents, String xytitle) {
         
@@ -301,7 +287,72 @@ public class ElectrochemUI extends javax.swing.JFrame {
         String osName = System.getProperty("os.name");
         return osName.contains("OS X");
     }
+    
+    public static String getExtension(String fileName) {
+        String extension = "";
 
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            extension = fileName.substring(i+1);
+        }
+        return extension;
+    }
+    
+    public static ArrayList<String> getGPESXYlabels(File fileOpen, String extension) {
+        String newfile = null;
+        String sCurrentLine;
+        BufferedReader br = null;
+        ArrayList<String> labels = new ArrayList<>();;
+        
+        switch (extension) {
+            case "ocw":
+                newfile = fileOpen.getAbsolutePath().replaceAll("ocw", "ici");
+                break;
+            case "oxw":
+                newfile = fileOpen.getAbsolutePath().replaceAll("oxw", "ixi");
+                break;
+            case "oew":
+                newfile = fileOpen.getAbsolutePath().replaceAll("oew", "iei");
+                break;
+        }
+        
+        //System.out.println("newfile:"+newfile);
+        
+        try {
+            br = new BufferedReader(new FileReader(newfile));
+            System.out.println("opened file");
+            int i=0;
+            while ((sCurrentLine = br.readLine()) != null) {
+                if (i == 3) {
+                    String[] xl = sCurrentLine.split("=");
+                    labels.add(xl[1]);                    
+                    System.out.println("xlabel:"+xl[1]);
+                } else if (i == 18) {
+                    String[] yl = sCurrentLine.split("=");
+                    labels.add(yl[1]);
+                    System.out.println("ylabel:"+yl[1]);
+                    break;
+                }
+                i++;
+            }
+        
+        } catch (IOException e) {
+            //e.printStackTrace();
+            labels.add("Xaxis");
+            labels.add("Yaxis");
+            //TODO: add axis by file format, for CM: standards
+            //TODO:log stacktrace+useful data
+        } finally {
+            try {
+                if (br != null)br.close();
+            } catch (IOException ex){
+                ex.printStackTrace();
+            }
+        }
+        
+        return labels;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -325,7 +376,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
 
         fileChooser.setCurrentDirectory(new java.io.File("/Users/yerga/Development/GPESfiles"));
         fileChooser.setDialogTitle("Open file...");
-        fileChooser.setFileFilter(new OCWFilter());
+        fileChooser.setFileFilter(null);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(800, 600));
@@ -392,7 +443,56 @@ public class ElectrochemUI extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jToggleButton1ActionPerformed
 
+
+    static class ExtensionFileFilter 
+        extends javax.swing.filechooser.FileFilter {
+
+        private List<String> extensions;
+        private String description;
+
+        public ExtensionFileFilter(String[] exts, String desc) {
+            if (exts != null) {
+                extensions = new ArrayList<>();
+
+                for (String ext : exts) {
+                    extensions.add(
+                        ext.replace(".", "").trim().toLowerCase()
+                    );
+                }
+            } 
+            description = (desc != null) ? desc.trim() : "Custom File List";
+        }
+
+        @Override
+        public boolean accept(File f) {
+            if (f.isDirectory()) return true;
+
+            if (extensions == null) return false;
+
+            for (String ext : extensions) {
+                if (f.getName().toLowerCase().endsWith("." + ext))
+                    return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+    }
+    
+    
     private void OpenGPESAction(java.awt.event.ActionEvent evt, boolean overlay) {
+        for (FileFilter item: fileChooser.getChoosableFileFilters()) {
+            fileChooser.removeChoosableFileFilter(item);
+        }
+        fileChooser.addChoosableFileFilter(new ExtensionFileFilter(new String[] {".ocw"}, "CV-LSV GPES (.ocw)"));
+        fileChooser.addChoosableFileFilter(new ExtensionFileFilter(new String[] {".oxw"}, "CM GPES (.oxw)"));
+        fileChooser.addChoosableFileFilter(new ExtensionFileFilter(new String[] {".oew"}, "VA GPES (.oew)"));
+        fileChooser.setAcceptAllFileFilterUsed(true);
+        
         int returnVal = fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
