@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
+import static my.electrochem.FindPeaks.peakdet;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -368,6 +369,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
         jToolBar1 = new javax.swing.JToolBar();
         jToggleButton1 = new javax.swing.JToggleButton();
         OverlayCurvesBtn = new javax.swing.JButton();
+        autoMeasureBtn = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         OpenGPES = new javax.swing.JMenuItem();
@@ -408,6 +410,17 @@ public class ElectrochemUI extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(OverlayCurvesBtn);
+
+        autoMeasureBtn.setText("Auto");
+        autoMeasureBtn.setFocusable(false);
+        autoMeasureBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        autoMeasureBtn.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        autoMeasureBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                autoMeasureBtnActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(autoMeasureBtn);
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.PAGE_START);
 
@@ -521,6 +534,31 @@ public class ElectrochemUI extends javax.swing.JFrame {
         
     }//GEN-LAST:event_OverlayCurvesBtnActionPerformed
 
+    private void autoMeasureBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoMeasureBtnActionPerformed
+        double xydata[][] = dataset1.getSeries(0).toArray();
+        ArrayList<Float> v = new ArrayList<>();
+        ArrayList<Float> x = new ArrayList<>();
+        
+        //System.out.println("xydata0: "+xydata[0].length);
+        
+        //System.out.println("lenght: "+xydata.length);
+        
+        for (int i = 0; i < xydata[0].length; i++) {
+            //System.out.println("x values: "+xydata[0][i]);
+            //System.out.println("y values: "+xydata[1][i]);
+            //System.out.println("xydata:"+xydata[0][1]);
+            //System.out.println("x point:"+xydata.toArray()[0].);
+            //System.out.println("y point:"+xydata.get);
+            v.add((float)xydata[1][i]);
+            x.add((float)xydata[0][i]);
+        }
+        //System.out.println("data"+xydata);
+        //TODO optimize delta value
+        ArrayList<ArrayList<ArrayList<Float>>> coll = peakdet(v, (float)1e-6, x);
+        System.out.println("coll data: "+coll);
+        
+    }//GEN-LAST:event_autoMeasureBtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -569,6 +607,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem Exit;
     private javax.swing.JMenuItem OpenGPES;
     private javax.swing.JButton OverlayCurvesBtn;
+    private javax.swing.JButton autoMeasureBtn;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
