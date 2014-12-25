@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
+import mr.go.sgfilter.ContinuousPadder;
+import mr.go.sgfilter.SGFilter;
 import static my.electrochem.FindPeaks.peakdet;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
@@ -370,6 +372,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
         jToggleButton1 = new javax.swing.JToggleButton();
         OverlayCurvesBtn = new javax.swing.JButton();
         autoMeasureBtn = new javax.swing.JButton();
+        SmoothBtn = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         OpenGPES = new javax.swing.JMenuItem();
@@ -421,6 +424,17 @@ public class ElectrochemUI extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(autoMeasureBtn);
+
+        SmoothBtn.setText("Smooth");
+        SmoothBtn.setFocusable(false);
+        SmoothBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        SmoothBtn.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        SmoothBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SmoothBtnActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(SmoothBtn);
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.PAGE_START);
 
@@ -559,6 +573,45 @@ public class ElectrochemUI extends javax.swing.JFrame {
         
     }//GEN-LAST:event_autoMeasureBtnActionPerformed
 
+    private void SmoothBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SmoothBtnActionPerformed
+        
+        double xydata[][] = dataset1.getSeries(0).toArray();
+        
+        double[] coeffs = SGFilter.computeSGCoefficients(5, 5, 4);
+        ContinuousPadder padder1 = new ContinuousPadder();
+        SGFilter sgFilter = new SGFilter(5, 5);
+        sgFilter.appendPreprocessor(padder1);
+        
+
+        float[] floatArray = new float[xydata[1].length];
+        
+        for (int i = 0 ; i < xydata[1].length; i++)
+        {
+            floatArray[i] = (float) xydata[1][i];
+        }
+        
+        float[] smooth = sgFilter.smooth(floatArray, coeffs);
+        
+        
+        ArrayList<Float> currents = new ArrayList<>();
+        for (int j = 0; j<smooth.length; j++) {
+            currents.add(smooth[j]);
+        }
+        
+        
+        ArrayList<Float> potentials = new ArrayList<>();
+        for (int j = 0; j<xydata[0].length; j++) {
+            potentials.add((float)xydata[0][j]);
+        }
+        
+        XYSeries series = getXYSeriesfromiE(potentials, currents, "smooth");
+
+        //dataset1.removeAllSeries();
+        dataset1.addSeries(series);
+        jPanel1.validate();
+        
+    }//GEN-LAST:event_SmoothBtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -607,6 +660,7 @@ public class ElectrochemUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem Exit;
     private javax.swing.JMenuItem OpenGPES;
     private javax.swing.JButton OverlayCurvesBtn;
+    private javax.swing.JButton SmoothBtn;
     private javax.swing.JButton autoMeasureBtn;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenu jMenu1;
